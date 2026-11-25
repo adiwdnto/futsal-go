@@ -17,6 +17,7 @@ export const sportLabel = {
 };
 
 export function formatRupiah(value) {
+  if (value == null) return 'Harga belum dikonfirmasi';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

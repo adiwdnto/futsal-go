@@ -5,31 +5,36 @@ Direktori lapangan futsal, mini-soccer, dan sepakbola untuk Pangkalpinang, denga
 ## Prasyarat
 
 - Node.js 18 atau lebih baru dan npm.
-- MySQL 8.0.16 atau lebih baru (dump menggunakan SRID 4326 dan collation MySQL 8).
-- File dump `db_futsal_pangkalpinang.sql` yang diberikan.
+- MySQL 8.0.16 atau lebih baru (mendukung SRID 4326 dan collation MySQL 8).
 
 ## Menyiapkan database
 
-1. Buat database `db_futsal_pangkalpinang` jika belum ada:
+Database final beserta data venue awal tersedia di
+[`backend/database/db_futsal_pangkalpinang.sql`](backend/database/db_futsal_pangkalpinang.sql).
+File ini membuat skema lengkap dan menambahkan venue publik yang dapat diverifikasi.
+Impor file tersebut **hanya untuk database baru**; jangan impor ulang ke database yang sudah berisi akun, booking, atau data operasional.
 
-   ```sql
-   CREATE DATABASE db_futsal_pangkalpinang
-     CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-   ```
+Jika `mysql` tersedia di `PATH`:
 
-2. Import dump awal melalui phpMyAdmin/klien MySQL. Contoh jika `mysql` sudah ada di `PATH`:
+```powershell
+cmd /c "mysql -u root -p < .\backend\database\db_futsal_pangkalpinang.sql"
+```
 
-   ```powershell
-   mysql -u root -p db_futsal_pangkalpinang < "$HOME\Downloads\db_futsal_pangkalpinang.sql"
-   ```
+File SQL tidak berisi akun pengguna, hash password, atau booking. Buat akun admin awal setelah impor sesuai langkah bootstrap di bawah. Harga atau jadwal yang tidak dapat diverifikasi tidak diisi; venue baru belum dapat dibooking sampai admin mengatur harga dan jadwalnya. Data venue contoh lama yang masih memiliki booking tetap disimpan, tetapi tidak dipublikasikan.
 
-3. Jalankan migrasi **satu kali**:
+### Data venue dan sumber
 
-   ```powershell
-   mysql -u root -p db_futsal_pangkalpinang < .\backend\database\migrations\001_booking_and_sports.sql
-   ```
+Data lokasi diperiksa pada Google Maps dan disilang-periksa dengan direktori/pengelola publik pada 25 November 2026. Tarif per jam dan jadwal hanya diisi bila sumber menyatakan nilainya dengan jelas; tarif per sesi atau tarif dalam rentang tidak dikonversi menjadi angka per jam.
 
-   Migrasi mempertahankan tabel dan data dump, menambahkan jenis olahraga, deskripsi/foto/status, jadwal mingguan, penutupan sementara, dan booking. Jadwal awal dibuat dari jam operasional lama untuk setiap hari. Data lapangan lama dengan `created_by = NULL` akan dimiliki oleh admin awal pada langkah berikutnya.
+| Venue | Jenis | Sumber |
+| --- | --- | --- |
+| Executive Futsal | Futsal | [Google Maps](https://www.google.com/maps/search/?api=1&query=Executive+Futsal+Pangkalpinang), [IDN Times](https://sumsel.idntimes.com/travel/destination/3-rekomendasi-sewa-lapangan-futsal-di-kota-pangkalpinang-c1c2-01-pj4sw-x9klg8), [Cybo](https://www.cybo.com/ID-biz/executive-futsal-badminton) |
+| Futsal CitraLand Botanical | Futsal | [Google Maps](https://www.google.com/maps/search/?api=1&query=Futsal+CitraLand+Botanical+Pangkalpinang), [AYO Indonesia](https://ayo.co.id/v/futsal-citraland-botanical) |
+| GWK Futsal Arena | Futsal | [Google Maps](https://www.google.com/maps/search/?api=1&query=GWK+Futsal+Arena+Pangkalpinang), [IDN Times](https://sumsel.idntimes.com/travel/destination/3-rekomendasi-sewa-lapangan-futsal-di-kota-pangkalpinang-c1c2-01-pj4sw-x9klg8), [Yandex Maps](https://yandex.com/maps/org/gwk_futsal_arena/59201304023/) |
+| Minisoccer ATO Arena | Mini-soccer | [Google Maps](https://www.google.com/maps/search/?api=1&query=Minisoccer+ATO+Arena+Pangkalpinang), [Sporto](https://sporto.id/) |
+| Waka Waka 88 Futsal dan Cafe | Futsal | [Google Maps](https://www.google.com/maps/search/?api=1&query=Waka+Waka+88+Futsal+Pangkalpinang), [IDN Times](https://sumsel.idntimes.com/travel/destination/3-rekomendasi-sewa-lapangan-futsal-di-kota-pangkalpinang-c1c2-01-pj4sw-x9klg8), [Restaurant Guru](https://restaurantguru.com/Waka-Waka-88-Futsal-dan-Cafe-Pangkal-Pinang) |
+
+Belum ditemukan listing sewa lapangan sepakbola ukuran penuh yang dapat diverifikasi dari sumber publik yang diperiksa, jadi kategori sepakbola belum diisi. Tarif di listing AYO untuk CitraLand dinyatakan per sesi, sedangkan tarif Executive/GWK yang ditemukan berupa rentang atau informasi lama; kolom harga per jam sengaja dibiarkan kosong. Konfirmasi harga, jadwal, dan ketersediaan langsung kepada venue sebelum melakukan booking.
 
 ## Menjalankan backend
 
@@ -74,7 +79,7 @@ Buka URL yang ditampilkan Vite (default `http://localhost:5173`). Vite meneruska
 
 ## Fitur
 
-- Pengunjung: peta dan katalog, pencarian nama/alamat, filter olahraga/fasilitas, detail, harga, lokasi, dan kontak.
+- Pengunjung: peta dan katalog, pencarian nama/alamat, filter olahraga/fasilitas, detail, harga, lokasi, dan kontak. Harga yang belum diverifikasi ditampilkan sebagai “Harga belum dikonfirmasi”, bukan Rp0.
 - Pengguna: registrasi/login, memilih slot tersedia, booking langsung terkonfirmasi tanpa pembayaran online, dan riwayat booking.
 - Admin: mengelola lapangan miliknya, fasilitas pilihan, jam/slot mingguan, penutupan sementara, booking, serta pengaturan profil akun.
 - Setiap endpoint admin membatasi lapangan, jadwal, penutupan, dan booking ke admin yang sedang login; ID pemilik tidak diterima dari request browser. Fasilitas merupakan katalog bersama yang hanya dapat dipilih.
